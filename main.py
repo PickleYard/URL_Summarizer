@@ -11,25 +11,23 @@ def scrape_and_summarize(url):
     soup = BeautifulSoup(response.content, 'html.parser')
     title = soup.title.string if soup.title else "No Title Found"
     article = soup.find('article') or soup.find('div',
-                                                {'class': 'article-content'})
+                                                class_='article-content')
     summary = article.get_text(
         separator='\n').strip() if article else "No Content Found"
     return title, summary
   except Exception as e:
-    return "Error", f"Failed to scrape {url}: {e}"
+    return "Error", f"Failed to scrape {url}: {str(e)}"
 
 
 @app.route('/scrape', methods=['POST'])
 def scrape_url():
-  data = request.json
-  if data and 'url' in data:
-    url = data['url']
+  url = request.json.get('url') if request.json else None
+  if url:
     title, summary = scrape_and_summarize(url)
     markdown_summary = f"# {title}\n\n## Summary\n{summary}\n"
     return jsonify({'markdown_summary': markdown_summary})
-  else:
-    return jsonify({'error': 'Invalid request. URL not provided.'}), 400
+  return jsonify({'error': 'Invalid request. URL not provided.'}), 400
 
 
-if __name__ == '__main__':
-  app.run(debug=True)
+if __name__ == "__main__":
+  app.run(host="0.0.0.0", port=5000)
